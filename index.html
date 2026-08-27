@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MP3 Library</title>
+<style>
+*{ box-sizing:border-box; }
+body{
+    background:#0f1117;
+    color:#e6edf3;
+    font-family:Segoe UI,Arial,sans-serif;
+    margin:0;
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+    user-select:none;
+    -webkit-user-select:none;
+}
+header{
+    background:linear-gradient(135deg,#1a1f35 0%,#0f1117 100%);
+    padding:25px;
+    text-align:center;
+    font-size:28px;
+    border-bottom:2px solid #3a7bd5;
+    color:#7eb8f7;
+    letter-spacing:1px;
+    text-shadow:0 0 20px rgba(62,130,247,0.3);
+}
+footer{
+    margin-top:auto;
+    padding:14px 25px;
+    background:#161b22;
+    border-top:1px solid #30363d;
+    text-align:center;
+    font-size:12px;
+    color:#8b949e;
+}
+footer a{ color:#7eb8f7; text-decoration:none; }
+footer a:hover{ text-decoration:underline; }
+.container{
+    width:95%;
+    max-width:1400px;
+    margin:0 auto;
+    padding:20px 25px;
+    flex:1;
+}
+.categories{
+    display:flex;
+    gap:10px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+}
+.categories button{
+    flex:1;
+    padding:10px;
+    background:#161b22;
+    border:1px solid #30363d;
+    color:white;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:13px;
+    transition:background 0.2s,border-color 0.2s;
+}
+.categories button:nth-child(1){ border-top:2px solid #2ecc71; }
+.categories button:nth-child(2){ border-top:2px solid #e74c3c; }
+.categories button:nth-child(3){ border-top:2px solid #f39c12; }
+.categories button:nth-child(4){ border-top:2px solid #8e44ad; }
+.categories button:nth-child(5){ border-top:2px solid #3a7bd5; }
+.categories button:nth-child(6){ border-top:2px solid #e67e22; }
+
+.matrix{
+    display:grid;
+    grid-template-columns:repeat(9,1fr);
+    gap:6px;
+    margin-bottom:10px;
+}
+.matrix button{
+    padding:8px;
+    background:#161b22;
+    border:1px solid #30363d;
+    color:#7eb8f7;
+    border-radius:5px;
+    cursor:pointer;
+    font-weight:600;
+    font-size:13px;
+    transition:background 0.15s,border-color 0.15s,color 0.15s;
+}
+.matrix button:hover, .matrix button.active{ background:#1f3a5c; border-color:#3a7bd5; color:#fff; }
+
+.search-wrap{ 
+    margin:10px 0 20px; 
+    display:flex; 
+    position: relative;
+    width: 100%; 
+}
+
+.search{
+    width:100%;
+    padding:8px 35px 8px 12px;
+    background:#161b22;
+    border:1px solid #30363d;
+    border-radius:5px;
+    color:#c9d1d9;
+    font-size:14px;
+}
+.search:focus{ outline:none; border-color:#3a7bd5; box-shadow:0 0 0 2px rgba(58,123,213,0.15); }
+
+.search-clear{
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #8b949e;
+    font-size: 20px;
+    cursor: pointer;
+    display: none; 
+    line-height: 1;
+}
+.search-clear:hover{ color: #fff; }
+
+.section-heading{
+    font-size:22px;
+    color:#7eb8f7;
+    margin-bottom:20px;
+    padding-bottom:10px;
+    border-bottom:1px solid #30363d;
+    text-align:center;
+    font-weight:600;
+}
+
+.results-grouped{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+    gap:12px;
+}
+.album-block{
+    background:#161b22;
+    border:1px solid #21262d;
+    border-radius:8px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    transition:border-color 0.15s;
+}
+.album-block:hover{ border-color:#3a7bd5; }
+.album-art-wrap{ width:100%; aspect-ratio:1/1; overflow:hidden; flex-shrink:0; }
+.album-art-wrap img{ width:100%; height:100%; object-fit:cover; display:block; cursor:pointer; }
+.album-art-placeholder{
+    width:100%; height:100%; background:#0d1117;
+    display:flex; align-items:center; justify-content:center;
+    color:#30363d; font-size:36px;
+}
+.album-info{ flex:1; display:flex; flex-direction:column; border-top:2px solid #3a7bd5; min-width:0; }
+.album-header{ padding:5px 8px; border-bottom:1px solid #21262d; background:#1c2230; }
+.album-header-top{ display:flex; justify-content:space-between; align-items:baseline; gap:6px; }
+.album-header-artist{ font-size:12px; font-weight:600; color:#7eb8f7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; }
+.album-header-year{ font-size:11px; color:#8b949e; flex-shrink:0; }
+
+.album-header-scroll-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.album-header-album { 
+    font-size: 11px; 
+    color: #8b949e; 
+    white-space: nowrap; 
+    overflow-x: auto; 
+    display: block;
+    flex: 1;
+    scrollbar-width: none; 
+}
+.album-header-album::-webkit-scrollbar { display: none; }
+
+.scroll-btn {
+    background: none;
+    border: none;
+    color: #3a7bd5;
+    cursor: pointer;
+    font-size: 10px;
+    padding: 2px;
+    transition: color 0.2s;
+    line-height: 1;
+    display: none; 
+}
+.scroll-btn:hover { color: #fff; }
+
+.album-tracks{
+    padding:2px 0;
+    overflow-y:auto;
+    max-height:240px;
+}
+.album-track{
+    padding:2px 8px;
+    font-size:12px;
+    line-height:1.65;
+    border-bottom:1px solid #1a1f2a;
+    display:flex;
+    gap:5px;
+    align-items:baseline;
+}
+.album-track-num{ color:#8b949e; font-size:12px; flex:0 0 20px; text-align:right; }
+.album-track-title{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+#lightbox{
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,0.88); z-index:1000;
+    align-items:center; justify-content:center;
+    flex-direction:column; gap:12px;
+}
+#lightbox.open{ display:flex; }
+#lightbox img{
+    max-width:90vw; max-height:80vh;
+    border-radius:6px; border:1px solid #30363d;
+}
+#lightbox-info{
+    color:#e6edf3; font-size:14px; text-align:center;
+    background:#161b22; border:1px solid #30363d;
+    border-radius:6px; padding:8px 18px;
+}
+#lightbox-close{
+    position:fixed; top:18px; right:22px;
+    background:none; border:none; color:#8b949e;
+    font-size:26px; cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div id="lightbox">
+    <button id="lightbox-close" onclick="closeLightbox()">&#x2715;</button>
+    <img id="lightbox-img" src="" alt="">
+    <div id="lightbox-info"></div>
+</div>
+
+<header>MP3 Library</header>
+
+<div class="container">
+    <div class="categories" id="categories">
+        <button onclick="loadCategory('OST',       this,'album',  'Soundtracks and Various Artist Albums')">Soundtrack</button>
+        <button onclick="loadCategory('Christmas',  this,'album',  'Christmas Related Albums')">Christmas</button>
+        <button onclick="loadCategory('Comedy',     this,'grouped','Comedy Albums')">Comedy</button>
+        <button onclick="loadCategory('Halloween',  this,'album',   'Halloween Related Albums')">Halloween</button>
+        <button onclick="loadCategory('Other',      this,'album',  'Other Albums (Less Than 320bps)')">Other</button>
+        <button id="btn-alternate" style="display:none" onclick="loadCategory('Alternate',this,'album','Alternate Albums')">Alternate</button>
+    </div>
+
+    <div class="matrix" id="matrix"></div>
+
+    <div class="search-wrap" id="search-wrap">
+        <input id="search" class="search" placeholder="Search titles, artists and albums">
+        <button id="search-clear-btn" class="search-clear" title="Clear search">&times;</button>
+    </div>
+
+    <div class="section-heading" id="section-heading"></div>
+    <div id="results"></div>
+</div>
+
+<footer>
+    &copy; <a id="bjlink" href="#">B. Johnson</a>
+    &nbsp;|&nbsp; Build: <span id="build-number">-</span>
+</footer>
+
+<script>
+(function(){
+    var a=document.getElementById('bjlink');
+    if(a){ a.href='mai'+'lto:'+'barryljohnson'+'@'+'yahoo'+'.com'; }
+})();
+
+fetch('data/search-index.json')
+    .then(function(r){ return r.json(); })
+    .then(function(d){ if(d.buildNumber) document.getElementById('build-number').textContent=d.buildNumber; })
+    .catch(function(){});
+
+var letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+var matrixEl   = document.getElementById('matrix');
+var resultsEl  = document.getElementById('results');
+var headingEl  = document.getElementById('section-heading');
+var searchInput = document.getElementById('search');
+var clearBtn    = document.getElementById('search-clear-btn');
+
+var titles      = [];
+var renderMode  = 'grouped';
+var activeBtn   = null;
+var currentLabel= '';
+
+function setActive(btn){
+    if(activeBtn) activeBtn.classList.remove('active');
+    activeBtn = btn;
+    if(activeBtn) activeBtn.classList.add('active');
+}
+
+var numBtn = document.createElement('button');
+numBtn.textContent = '#';
+numBtn.onclick = function(){ setActive(numBtn); loadLetter('num', "Artists Beginning with '#'"); };
+matrixEl.appendChild(numBtn);
+
+letters.forEach(function(letter){
+    var b = document.createElement('button');
+    b.textContent = letter;
+    b.onclick = function(){ setActive(b); loadLetter(letter, "Artists Beginning with '"+letter+"'"); };
+    matrixEl.appendChild(b);
+});
+
+function loadLetter(letter, label){
+    currentLabel = label;
+    clearSearchUI();
+    fetch('data/titles/'+letter+'.json')
+        .then(function(r){ return r.json(); })
+        .then(function(data){ titles=data; renderMode='grouped'; render(titles); })
+        .catch(function(e){ console.error('Error loading letter:',letter,e); });
+}
+
+function loadCategory(name, btn, mode, label){
+    setActive(btn);
+    currentLabel = label;
+    clearSearchUI();
+    // Fetches the Alternate.json from data/categories
+    fetch('data/categories/'+name+'.json')
+        .then(function(r){ return r.json(); })
+        .then(function(data){ titles=data; renderMode=mode; render(titles); })
+        .catch(function(e){ console.error('Error loading category:',name,e); });
+}
+
+function render(list){
+    headingEl.textContent = currentLabel;
+    
+    if(renderMode==='album'){
+        renderGrouped(list,
+            function(item){ return (item.album||'').trim().toLowerCase(); },
+            function(item){ return (item.album||'').trim().toLowerCase(); }
+        );
+    } else {
+        renderGrouped(list,
+            function(item){ 
+                return (item.artist||'').trim().toLowerCase() + (item.year||'') + (item.album||'').trim().toLowerCase(); 
+            },
+            function(item){ 
+                return (item.artist||'').trim().toLowerCase() + (item.year||'') + (item.album||'').trim().toLowerCase(); 
+            }
+        );
+    }
+}
+
+function scrollAlbum(btn, direction) {
+    var container = btn.parentElement.querySelector('.album-header-album');
+    container.scrollBy({ left: direction * 50, behavior: 'smooth' });
+}
+
+function renderGrouped(list, groupKeyFn, sortKeyFn){
+    resultsEl.innerHTML='';
+    var albumMap=new Map();
+    
+    list.forEach(function(item){
+        var gk=groupKeyFn(item);
+        var sk=sortKeyFn(item);
+        if(!albumMap.has(gk)){
+            albumMap.set(gk,{
+                art:item.art||null,
+                artist:item.artist||'',
+                year:item.year||'',
+                album:item.album||'',
+                sortKey:sk,
+                tracks:[],
+                uniqueArtists: new Set() 
+            });
+        }
+        var entry = albumMap.get(gk);
+        entry.tracks.push({num:item.track||'',title:item.title});
+        if(item.artist) entry.uniqueArtists.add(item.artist.trim());
+    });
+    
+    var sorted=Array.from(albumMap.values()).sort(function(a,b){ return a.sortKey.localeCompare(b.sortKey); });
+    var container=document.createElement('div');
+    container.className='results-grouped';
+    
+    sorted.forEach(function(album){
+        album.tracks.sort(function(a,b){
+            var na=parseInt(a.num)||0, nb=parseInt(b.num)||0;
+            return na!==nb ? na-nb : a.title.localeCompare(b.title);
+        });
+
+        var displayArtist = (album.uniqueArtists.size > 1) ? "Various Artists" : album.artist;
+
+        var block=document.createElement('div');
+        block.className='album-block';
+        var artWrap=document.createElement('div');
+        artWrap.className='album-art-wrap';
+        if(album.art){
+            var img=document.createElement('img');
+            img.src='covers/'+album.art;
+            img.onclick=(function(s,l){ return function(){ openLightbox(s,l); }; })(img.src, displayArtist + ' - ' + album.album);
+            artWrap.appendChild(img);
+        } else {
+            var ph=document.createElement('div');
+            ph.className='album-art-placeholder';
+            ph.textContent='\u266B';
+            artWrap.appendChild(ph);
+        }
+        block.appendChild(artWrap);
+
+        var info=document.createElement('div');
+        info.className='album-info';
+        var hdr=document.createElement('div');
+        hdr.className='album-header';
+        
+        var top=document.createElement('div');
+        top.className='album-header-top';
+        var ae=document.createElement('span');
+        ae.className='album-header-artist';
+        ae.textContent=displayArtist;
+        var ye=document.createElement('span');
+        ye.className='album-header-year';
+        ye.textContent=album.year||'';
+        top.appendChild(ae);
+        top.appendChild(ye);
+        hdr.appendChild(top);
+
+        var scrollWrap = document.createElement('div');
+        scrollWrap.className = 'album-header-scroll-container';
+        
+        var leftBtn = document.createElement('button');
+        leftBtn.className = 'scroll-btn';
+        leftBtn.innerHTML = '&#9664;'; 
+        leftBtn.onclick = function() { scrollAlbum(this, -1); };
+
+        var rightBtn = document.createElement('button');
+        rightBtn.className = 'scroll-btn';
+        rightBtn.innerHTML = '&#9654;'; 
+        rightBtn.onclick = function() { scrollAlbum(this, 1); };
+
+        var ale=document.createElement('div');
+        ale.className='album-header-album';
+        ale.textContent=album.album;
+
+        scrollWrap.appendChild(leftBtn);
+        scrollWrap.appendChild(ale);
+        scrollWrap.appendChild(rightBtn);
+        hdr.appendChild(scrollWrap);
+        info.appendChild(hdr);
+
+        setTimeout(function(){
+            if(ale.scrollWidth > ale.clientWidth) {
+                leftBtn.style.display = 'block';
+                rightBtn.style.display = 'block';
+            }
+        }, 0);
+
+        var tl=document.createElement('div');
+        tl.className='album-tracks';
+        album.tracks.forEach(function(t){
+            var row=document.createElement('div');
+            row.className='album-track';
+            var num=document.createElement('span');
+            num.className='album-track-num';
+            num.textContent=t.num?parseInt(t.num):'';
+            var ttl=document.createElement('span');
+            ttl.className='album-track-title';
+            ttl.textContent=t.title;
+            row.appendChild(num);
+            row.appendChild(ttl);
+            tl.appendChild(row);
+        });
+        info.appendChild(tl);
+        block.appendChild(info);
+        container.appendChild(block);
+    });
+    resultsEl.appendChild(container);
+}
+
+searchInput.addEventListener('input',function(e){
+    var query=e.target.value.trim();
+    clearBtn.style.display = (query.length > 0) ? 'block' : 'none';
+    if(query===''){render(titles);return;}
+    var regex;
+    try{ regex=new RegExp(query,'i'); } catch(ex){ regex=new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'); }
+    var filtered=titles.filter(function(item){
+        return regex.test(item.title||'')||regex.test(item.artist||'')||regex.test(item.album||'');
+    });
+    render(filtered);
+});
+
+clearBtn.onclick = function() {
+    clearSearchUI();
+    render(titles);
+};
+
+function clearSearchUI() {
+    searchInput.value = '';
+    clearBtn.style.display = 'none';
+}
+
+function openLightbox(src,label){
+    var lightbox=document.getElementById('lightbox');
+    var img=document.getElementById('lightbox-img');
+    img.src=src;
+    document.getElementById('lightbox-info').textContent=label;
+    lightbox.classList.add('open');
+}
+function closeLightbox(){ document.getElementById('lightbox').classList.remove('open'); }
+
+document.addEventListener('keydown',function(e){
+    if(e.key==='Escape') closeLightbox();
+    // Listens for Ctrl + Shift + @ to toggle button visibility
+    if(e.ctrlKey && e.shiftKey && e.key==='@'){
+        var btn=document.getElementById('btn-alternate');
+        btn.style.display=btn.style.display==='none'?'inline-block':'none';
+    }
+});
+</script>
+</body>
+</html>

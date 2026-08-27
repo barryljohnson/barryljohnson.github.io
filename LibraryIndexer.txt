@@ -1,0 +1,7 @@
+
+javac -cp .;jaudiotagger-3.0.1.jar LibraryIndexer.java
+
+java -Xmx2g -cp .;jaudiotagger-3.0.1.jar LibraryIndexer "F:\MP3\The Collection" > look.txt 2> look2.txt
+
+Hidden menu item: Ctlr+Shift+@
+
